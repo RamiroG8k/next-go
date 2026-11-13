@@ -1,34 +1,57 @@
-# NEXT-GO ![Next-Go](https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Nextjs-logo.svg/64px-Nextjs-logo.svg.png)
+# next-go
 
-🚀 A cutting-edge Next.js template powered by Bun and Zod for environment variable validation.
+> **Legacy — documentation only.** The source was removed from `master` on 2026-11-13 and is
+> preserved at tag [`legacy-2026-11`](https://github.com/RamiroG8k/next-go/tree/legacy-2026-11).
+>
+> This was the template every 2024 project was scaffolded from (`geb`, `prueba`, `3DM`,
+> `pedro-tattooer`, `animoving`). Docs-only means it can no longer be cloned as a starter —
+> see the rebuild notes for how to recreate it.
 
-## 📝 Overview
+## What it was
 
-Welcome to **Next-Go**! This project template is designed to kickstart your Next.js application with powerful features and best practices out of the box.
+A Next.js App Router boilerplate with three opinions baked in:
 
-- **Environment Variable Validation**: Utilizing `zod` for robust type-safe environment variable handling.
-- **Bun Integration**: Built-in support for the Bun runtime.
-- **Optimized Configurations**: Fine-tuned `next.config.mjs` for exportable builds and unoptimized images.
-- **Modern Tooling**: Equipped with TypeScript, TailwindCSS, ESLint, and more.
+1. **Typed environment variables** — Zod schemas split into `serverSchema` and `clientSchema`,
+   validated at build/start, exported as one `env` object.
+2. **`cn()`** — `twMerge(clsx(...))`, the shadcn-style class merger.
+3. **The boring scaffolding** — `src/app/layout.tsx`, `fonts.ts` (next/font), `sitemap.ts`,
+   `types/`, `declarations.d.ts`, ESLint, Tailwind, `bun.lockb`.
 
-## ⚙️ Environment Variable Validation
+Built 2024-08 (10 commits), public.
 
-We leverage the power of `zod` to ensure your environment variables are correctly defined and validated. Check out our schema definitions below:
+## The env pattern (the reason this repo existed)
 
-```js
-import { z } from 'zod';
+```
+src/env/schema.mjs   # zod: serverSchema + clientSchema
+src/env/client.mjs   # NEXT_PUBLIC_* → parsed client env
+src/env/server.mjs   # server-only vars
+src/env/format.mjs   # error formatting
+src/env/index.mjs    # merges into `env`
+```
 
-export const serverSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production']).default('development')
-});
+Any module imports `env` from `~/env` and gets validated values. Missing or malformed vars fail
+fast with a readable error instead of `undefined` at runtime.
 
-export const clientSchema = z.object({
-  NEXT_PUBLIC_BASE_URL: z.string().url()
-});
+## What worked, worth reusing
 
-...
+- The split between client and server schemas — `NEXT_PUBLIC_*` validated separately stops secrets
+  leaking into the bundle.
+- `cn()` as the single class-merging helper.
+- `next/font` loaded once in `fonts.ts` and re-exported.
 
-// Usage example with type annotations
-const baseUrl = clientEnv.NEXT_PUBLIC_BASE_URL;
+## Why it stopped
 
+Next.js absorbed most of it (`next/font`, typed env via `@t3-oss/env-nextjs`), Tailwind moved to v4
+with a CSS-first config, and the boilerplate stopped paying rent.
+
+## Rebuild notes
+
+See [docs/refactor-brief.md](docs/refactor-brief.md).
+
+## Recover the code
+
+```bash
+git clone https://github.com/RamiroG8k/next-go && cd next-go
+git checkout legacy-2026-11
+bun install && bun dev
 ```
